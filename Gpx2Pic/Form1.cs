@@ -9,7 +9,6 @@ using System.Windows.Forms;
 using ExifLib;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Threading.Tasks;
 using System.Text;
 
 namespace Gpx2Pic
@@ -49,75 +48,82 @@ namespace Gpx2Pic
 
         private void FillListView(string picturesFolder)
         {
-            listView1.BeginUpdate();
-            listView1.Items.Clear();
-
-            string[] filter = new string[] { ".jpg", ".jpeg" };
-            foreach (var f in Directory.EnumerateFiles(picturesFolder, "*.*", SearchOption.TopDirectoryOnly).Where(f => filter.Any(x => f.EndsWith(x, StringComparison.OrdinalIgnoreCase))))
+            try
             {
-                ListViewItem item = new ListViewItem(Path.GetFileName(f));
-                FileInfo fi = new FileInfo(f);
-                item.SubItems.Add((fi.Length / 1024.0 / 1024.0).ToString("N") + " MB").Name = "FileSize";
+                listView1.BeginUpdate();
+                listView1.Items.Clear();
 
-                using (ExifReader reader = new ExifReader(f))
+                string[] filter = new string[] { ".jpg", ".jpeg" };
+                foreach (var f in Directory.EnumerateFiles(picturesFolder, "*.*", SearchOption.TopDirectoryOnly).Where(f => filter.Any(x => f.EndsWith(x, StringComparison.OrdinalIgnoreCase))))
                 {
-                    bool isValid = true;
+                    ListViewItem item = new ListViewItem(Path.GetFileName(f));
+                    FileInfo fi = new FileInfo(f);
+                    item.SubItems.Add((fi.Length / 1024.0 / 1024.0).ToString("N") + " MB").Name = "FileSize";
 
-                    if (reader.GetTagValue(ExifTags.Model, out string model))
+                    using (ExifReader reader = new ExifReader(f))
                     {
-                        item.SubItems.Add(model.ToString()).Name = "Model";
-                    }
-                    else
-                    {
-                        item.SubItems.Add("").Name = "Model";
+                        bool isValid = true;
+
+                        if (reader.GetTagValue(ExifTags.Model, out string model))
+                        {
+                            item.SubItems.Add(model.ToString()).Name = "Model";
+                        }
+                        else
+                        {
+                            item.SubItems.Add("").Name = "Model";
+                        }
+
+                        if (reader.GetTagValue(ExifTags.DateTimeOriginal, out DateTime datePictureTaken))
+                        {
+                            item.SubItems.Add(datePictureTaken.ToString()).Name = "Taken";
+                            item.Tag = FindNearestTrackPoint(datePictureTaken);
+                        }
+                        else
+                        {
+                            item.SubItems.Add("").Name = "Taken";
+                            isValid = false;
+                        }
+
+                        if (reader.GetTagValue(ExifTags.PixelXDimension, out uint width) && reader.GetTagValue(ExifTags.PixelYDimension, out uint height))
+                        {
+                            item.SubItems.Add(string.Format("{0} x {1}", width, height)).Name = "ImageSize";
+                        }
+                        else
+                        {
+                            item.SubItems.Add("").Name = "ImageSize";
+                        }
+
+                        if (item.Tag is GpxPoint point)
+                        {
+                            item.SubItems.Add(string.Format(CultureInfo.InvariantCulture, "{0}, {1}", point.Latitude, point.Longitude)).Name = "LatLong";
+                        }
+                        else
+                        {
+                            item.SubItems.Add("").Name = "LatLong";
+                            isValid = false;
+                        }
+
+                        item.Checked = isValid;
                     }
 
-                    if (reader.GetTagValue(ExifTags.DateTimeOriginal, out DateTime datePictureTaken))
-                    {
-                        item.SubItems.Add(datePictureTaken.ToString()).Name = "Taken";
-                        item.Tag = FindNearestTrackPoint(datePictureTaken);
-                    }
-                    else
-                    {
-                        item.SubItems.Add("").Name = "Taken";
-                        isValid = false;
-                    }
-
-                    if (reader.GetTagValue(ExifTags.PixelXDimension, out uint width) && reader.GetTagValue(ExifTags.PixelYDimension, out uint height))
-                    {
-                        item.SubItems.Add(string.Format("{0} x {1}", width, height)).Name = "ImageSize";
-                    }
-                    else
-                    {
-                        item.SubItems.Add("").Name = "ImageSize";
-                    }
-
-                    if (item.Tag is GpxPoint point)
-                    {
-                        item.SubItems.Add(string.Format(CultureInfo.InvariantCulture, "{0},{1}", point.Latitude, point.Longitude)).Name = "LatLong";
-                    }
-                    else
-                    {
-                        item.SubItems.Add("").Name = "LatLong";
-                        isValid = false;
-                    }
-
-                    item.Checked = isValid;
+                    listView1.Items.Add(item);
                 }
 
-                listView1.Items.Add(item);
+                listView1.EndUpdate();
             }
-
-            listView1.EndUpdate();
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             Text = string.Format("{0} - Automatically geotag your photos (v{1})", Application.ProductName, Application.ProductVersion.Substring(0, Application.ProductVersion.Length - 2));
 
-            if (!(string.IsNullOrEmpty(textBoxGpxFile.Text) || string.IsNullOrEmpty(textBoxPicturesFolder.Text)))
+            if (!(string.IsNullOrEmpty(Properties.Settings.Default.GpxFileName) || string.IsNullOrEmpty(Properties.Settings.Default.PicturesFolder)))
             {
-                buttonAnalyze_Click(null, null);
+                Analyze(Properties.Settings.Default.GpxFileName, Properties.Settings.Default.PicturesFolder);
             }
         }
 
@@ -129,8 +135,7 @@ namespace Gpx2Pic
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
                     FileName = "exiftool.exe",
-                    Arguments = String.Format(CultureInfo.InvariantCulture, "{0} -XMP:GPSLatitude=\"{1}\" -XMP:GPSLongitude=\"{2}\"", fileName, latitude, longitude),
-
+                    Arguments = String.Format(CultureInfo.InvariantCulture, "{0} -GPSLatitude=\"{1}\" -GPSLongitude=\"{2}\" -GPSLatitudeRef=\"{3}\" -GPSLongitudeRef=\"{4}\"", fileName, latitude, longitude, latitude >= 0 ? "North" : "South", longitude >= 0 ? "East" : "West"),
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
@@ -223,8 +228,7 @@ namespace Gpx2Pic
                 // Set the resizing flag
                 Resizing = true;
 
-                ListView listView = sender as ListView;
-                if (listView != null)
+                if (sender is ListView listView)
                 {
                     float totalColumnWidth = 0;
 
@@ -250,13 +254,14 @@ namespace Gpx2Pic
         private void textBoxGpxFile_TextChanged(object sender, EventArgs e)
         {
             buttonSave.Enabled = !(string.IsNullOrEmpty(textBoxGpxFile.Text) || string.IsNullOrEmpty(textBoxPicturesFolder.Text));
+            Properties.Settings.Default.Save();
         }
 
         private void textBoxGpxFile_Click(object sender, EventArgs e)
         {
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                textBoxGpxFile.Text = openFileDialog1.FileName;
+                Properties.Settings.Default.GpxFileName = openFileDialog1.FileName;
                 LoadGpx(openFileDialog1.FileName);
             }
         }
@@ -270,7 +275,7 @@ namespace Gpx2Pic
             {
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
-                    textBoxPicturesFolder.Text = dialog.FileName;
+                    Properties.Settings.Default.PicturesFolder = dialog.FileName;
                 }
             }
         }
@@ -287,10 +292,14 @@ namespace Gpx2Pic
             }
             else
             {
-                Properties.Settings.Default.Save();
-                LoadGpx(textBoxGpxFile.Text);
-                FillListView(textBoxPicturesFolder.Text);
+                Analyze(textBoxGpxFile.Text, textBoxPicturesFolder.Text);
             }
+        }
+
+        private void Analyze(string gpxFileName, string picturesFolder)
+        {
+            LoadGpx(textBoxGpxFile.Text);
+            FillListView(textBoxPicturesFolder.Text);
         }
 
         private void buttonShowUpInGoogleMaps_Click(object sender, EventArgs e)
@@ -300,7 +309,7 @@ namespace Gpx2Pic
                 string latLong = listView1.SelectedItems[0].SubItems["LatLong"].Text;
                 if (!string.IsNullOrEmpty(latLong))
                 {
-                    Process.Start(string.Format("https://www.google.com/maps/search/?api=1&query={0}", latLong));
+                    Process.Start(string.Format("https://www.google.com/maps/search/?api=1&query={0}", latLong.Replace(" ", "")));
                 }
                 else
                 {
@@ -309,7 +318,7 @@ namespace Gpx2Pic
             }
             else
             {
-                MessageBox.Show("Select (just focus) item.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Select item.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -354,7 +363,7 @@ namespace Gpx2Pic
                         if (item.Tag is GpxPoint point)
                         {
                             string fileName = Path.Combine(textBoxPicturesFolder.Text, item.Text);
-                            bool result = GeoTagPhoto(fileName, point.Latitude, point.Longitude);
+                            bool result = GeoTagPhoto(Path.Combine(textBoxPicturesFolder.Text, fileName), point.Latitude, point.Longitude);
 
                             if (result)
                             {
