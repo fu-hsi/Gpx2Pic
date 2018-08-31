@@ -25,9 +25,11 @@ namespace Gpx2Pic
 
         private void LoadGpx(string fileName)
         {
+            FileStream fs = null;
             try
             {
-                using (GpxReader gpxReader = new GpxReader(new FileStream(fileName, FileMode.Open)))
+                fs = new FileStream(fileName, FileMode.Open);
+                using (GpxReader gpxReader = new GpxReader(fs))
                 {
                     while (gpxReader.Read())
                     {
@@ -43,6 +45,13 @@ namespace Gpx2Pic
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                if (fs != null)
+                {
+                    fs.Close();
+                }
             }
         }
 
@@ -135,7 +144,7 @@ namespace Gpx2Pic
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
                     FileName = "exiftool.exe",
-                    Arguments = String.Format(CultureInfo.InvariantCulture, "{0} -GPSLatitude=\"{1}\" -GPSLongitude=\"{2}\" -GPSLatitudeRef=\"{3}\" -GPSLongitudeRef=\"{4}\"", fileName, latitude, longitude, latitude >= 0 ? "North" : "South", longitude >= 0 ? "East" : "West"),
+                    Arguments = String.Format(CultureInfo.InvariantCulture, "\"{0}\" -GPSLatitude=\"{1}\" -GPSLongitude=\"{2}\" -GPSLatitudeRef=\"{3}\" -GPSLongitudeRef=\"{4}\"", fileName, latitude, longitude, latitude >= 0 ? "North" : "South", longitude >= 0 ? "East" : "West"),
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
