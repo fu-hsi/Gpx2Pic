@@ -15,7 +15,7 @@ namespace Gpx2Pic
 {
     public partial class Form1 : Form
     {
-        GpxPointCollection<GpxPoint> gpxPoints;
+        private GpxPointCollection<GpxPoint> gpxPoints;
         private bool Resizing = false;
 
         public Form1()
@@ -25,6 +25,11 @@ namespace Gpx2Pic
 
         private void LoadGpx(string fileName)
         {
+            if (string.IsNullOrEmpty(textBoxGpxFile.Text) || !File.Exists(textBoxGpxFile.Text))
+            {
+                return;
+            }
+
             FileStream fs = null;
             try
             {
@@ -59,6 +64,12 @@ namespace Gpx2Pic
         {
             try
             {
+                if (string.IsNullOrEmpty(textBoxPicturesFolder.Text) || !Directory.Exists(textBoxPicturesFolder.Text))
+                {
+                    listView1.Items.Clear();
+                    return;
+                }
+
                 listView1.BeginUpdate();
                 listView1.Items.Clear();
 
@@ -84,8 +95,14 @@ namespace Gpx2Pic
 
                         if (reader.GetTagValue(ExifTags.DateTimeOriginal, out DateTime datePictureTaken))
                         {
-                            item.SubItems.Add(datePictureTaken.ToString()).Name = "Taken";
-                            item.Tag = FindNearestTrackPoint(datePictureTaken);
+                            DateTime newDatePictureTaken = datePictureTaken.AddSeconds((double)numericUpDownTimeOffset.Value);
+                            string text = datePictureTaken.ToString();
+                            if (numericUpDownTimeOffset.Value != 0)
+                            {
+                                text += " -> " + newDatePictureTaken.ToLongTimeString();
+                            }
+                            item.SubItems.Add(text).Name = "Taken";
+                            item.Tag = FindNearestTrackPoint(newDatePictureTaken);
                         }
                         else
                         {
@@ -104,7 +121,7 @@ namespace Gpx2Pic
 
                         if (item.Tag is GpxPoint point)
                         {
-                            item.SubItems.Add(string.Format(CultureInfo.InvariantCulture, "{0}, {1}", point.Latitude, point.Longitude)).Name = "LatLong";
+                            item.SubItems.Add(string.Format(CultureInfo.InvariantCulture, "{0:F6}, {1:F6}", point.Latitude, point.Longitude)).Name = "LatLong";
                         }
                         else
                         {
@@ -129,11 +146,7 @@ namespace Gpx2Pic
         private void Form1_Load(object sender, EventArgs e)
         {
             Text = string.Format("{0} - Automatically geotag your photos (v{1})", Application.ProductName, Application.ProductVersion.Substring(0, Application.ProductVersion.Length - 2));
-
-            if (!(string.IsNullOrEmpty(Properties.Settings.Default.GpxFileName) || string.IsNullOrEmpty(Properties.Settings.Default.PicturesFolder)))
-            {
-                Analyze(Properties.Settings.Default.GpxFileName, Properties.Settings.Default.PicturesFolder);
-            }
+            Analyze();
         }
 
         private bool GeoTagPhoto(string fileName, double latitude, double longitude)
@@ -173,12 +186,10 @@ namespace Gpx2Pic
         {
             try
             {
-                int errorMargin = 60 * 5;
                 DateTime utcDateTime = localDateTime.ToUniversalTime();
-
                 GpxPoint closestGpx = gpxPoints.OrderBy(x => Math.Abs((x.Time - utcDateTime).Value.TotalSeconds)).FirstOrDefault();
 
-                if (Math.Abs((closestGpx.Time - utcDateTime).Value.TotalSeconds) > errorMargin)
+                if (Math.Abs((closestGpx.Time - utcDateTime).Value.TotalSeconds) > (int)Properties.Settings.Default.ErrorMargin)
                 {
                     return null;
                 }
@@ -192,7 +203,7 @@ namespace Gpx2Pic
                 return null;
             }
         }
-
+        
         private void listView1_ItemChecked(object sender, ItemCheckedEventArgs e)
         {
             buttonSave.Enabled = listView1.CheckedItems.Count > 0;
@@ -218,6 +229,7 @@ namespace Gpx2Pic
             if (backgroundWorker1.IsBusy == false)
             {
                 listView1.Items.Cast<ListViewItem>().ToList().ForEach(x => { x.BackColor = Color.White; x.ForeColor = Color.Black; });
+                buttonSave.Text = "Cancel";
                 backgroundWorker1.RunWorkerAsync();
             }
             else
@@ -263,7 +275,13 @@ namespace Gpx2Pic
         private void textBoxGpxFile_TextChanged(object sender, EventArgs e)
         {
             buttonSave.Enabled = !(string.IsNullOrEmpty(textBoxGpxFile.Text) || string.IsNullOrEmpty(textBoxPicturesFolder.Text));
-            Properties.Settings.Default.Save();
+            textBoxPicturesFolder.Text = Path.GetDirectoryName(textBoxGpxFile.Text);
+        }
+
+        private void textBoxPicturesFolder_TextChanged(object sender, EventArgs e)
+        {
+            buttonSave.Enabled = !(string.IsNullOrEmpty(textBoxGpxFile.Text) || string.IsNullOrEmpty(textBoxPicturesFolder.Text));
+            Analyze();
         }
 
         private void textBoxGpxFile_Click(object sender, EventArgs e)
@@ -291,21 +309,21 @@ namespace Gpx2Pic
 
         private void buttonAnalyze_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(textBoxGpxFile.Text))
+            if (string.IsNullOrEmpty(textBoxGpxFile.Text) || !File.Exists(textBoxGpxFile.Text))
             {
-                MessageBox.Show("Select GPX file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Select an existing GPX file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else if (string.IsNullOrEmpty(textBoxPicturesFolder.Text))
+            else if (string.IsNullOrEmpty(textBoxPicturesFolder.Text) || !Directory.Exists(textBoxPicturesFolder.Text))
             {
-                MessageBox.Show("Select pictures folder.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Select an existing pictures folder.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
-                Analyze(textBoxGpxFile.Text, textBoxPicturesFolder.Text);
+                Analyze();
             }
         }
 
-        private void Analyze(string gpxFileName, string picturesFolder)
+        private void Analyze()
         {
             LoadGpx(textBoxGpxFile.Text);
             FillListView(textBoxPicturesFolder.Text);
@@ -423,6 +441,7 @@ namespace Gpx2Pic
                     MessageBox.Show(string.Format("The files has been modified ({0}/{1}).", affectedFiles, totalFiles), "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
+            buttonSave.Text = "Save GPS";
         }
 
         private void backgroundWorker1_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
@@ -431,6 +450,11 @@ namespace Gpx2Pic
             {
                 item.EnsureVisible();
             }
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Properties.Settings.Default.Save();
         }
     }
 }

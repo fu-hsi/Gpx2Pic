@@ -46,5 +46,29 @@ namespace Gpx2Pic.Properties {
                 this["PicturesFolder"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public decimal TimeOffset {
+            get {
+                return ((decimal)(this["TimeOffset"]));
+            }
+            set {
+                this["TimeOffset"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("300")]
+        public decimal ErrorMargin {
+            get {
+                return ((decimal)(this["ErrorMargin"]));
+            }
+            set {
+                this["ErrorMargin"] = value;
+            }
+        }
     }
 }

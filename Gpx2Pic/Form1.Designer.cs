@@ -48,12 +48,18 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.buttonAnalyze = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.numericUpDownErrorMargin = new System.Windows.Forms.NumericUpDown();
+            this.label4 = new System.Windows.Forms.Label();
+            this.numericUpDownTimeOffset = new System.Windows.Forms.NumericUpDown();
+            this.label3 = new System.Windows.Forms.Label();
             this.textBoxGpxFile = new System.Windows.Forms.TextBox();
             this.textBoxPicturesFolder = new System.Windows.Forms.TextBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.panelButtons.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownErrorMargin)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownTimeOffset)).BeginInit();
             this.SuspendLayout();
             // 
             // listView1
@@ -74,7 +80,7 @@
             this.listView1.Location = new System.Drawing.Point(10, 0);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(764, 286);
+            this.listView1.Size = new System.Drawing.Size(764, 249);
             this.listView1.TabIndex = 4;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -83,7 +89,7 @@
             // 
             // columnHeader1
             // 
-            this.columnHeader1.Tag = "2";
+            this.columnHeader1.Tag = "1";
             this.columnHeader1.Text = "File Name";
             this.columnHeader1.Width = 177;
             // 
@@ -127,7 +133,7 @@
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(80, 31);
             this.buttonSave.TabIndex = 10;
-            this.buttonSave.Text = "Save EXIF";
+            this.buttonSave.Text = "Save GPS";
             this.buttonSave.UseVisualStyleBackColor = true;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             // 
@@ -208,10 +214,10 @@
             // 
             this.panel1.Controls.Add(this.listView1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(0, 100);
+            this.panel1.Location = new System.Drawing.Point(0, 137);
             this.panel1.Name = "panel1";
             this.panel1.Padding = new System.Windows.Forms.Padding(10, 0, 10, 0);
-            this.panel1.Size = new System.Drawing.Size(784, 286);
+            this.panel1.Size = new System.Drawing.Size(784, 249);
             this.panel1.TabIndex = 14;
             // 
             // label1
@@ -247,12 +253,17 @@
             this.buttonAnalyze.Name = "buttonAnalyze";
             this.buttonAnalyze.Size = new System.Drawing.Size(80, 59);
             this.buttonAnalyze.TabIndex = 14;
-            this.buttonAnalyze.Text = "Analyze";
+            this.buttonAnalyze.Text = "Refresh";
             this.buttonAnalyze.UseVisualStyleBackColor = true;
             this.buttonAnalyze.Click += new System.EventHandler(this.buttonAnalyze_Click);
             // 
             // panel2
             // 
+            this.panel2.AutoSize = true;
+            this.panel2.Controls.Add(this.numericUpDownErrorMargin);
+            this.panel2.Controls.Add(this.label4);
+            this.panel2.Controls.Add(this.numericUpDownTimeOffset);
+            this.panel2.Controls.Add(this.label3);
             this.panel2.Controls.Add(this.buttonAnalyze);
             this.panel2.Controls.Add(this.label2);
             this.panel2.Controls.Add(this.textBoxGpxFile);
@@ -262,8 +273,59 @@
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
             this.panel2.Padding = new System.Windows.Forms.Padding(10);
-            this.panel2.Size = new System.Drawing.Size(784, 100);
+            this.panel2.Size = new System.Drawing.Size(784, 137);
             this.panel2.TabIndex = 13;
+            // 
+            // numericUpDownErrorMargin
+            // 
+            this.numericUpDownErrorMargin.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Gpx2Pic.Properties.Settings.Default, "ErrorMargin", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.numericUpDownErrorMargin.Location = new System.Drawing.Point(9, 104);
+            this.numericUpDownErrorMargin.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numericUpDownErrorMargin.Name = "numericUpDownErrorMargin";
+            this.numericUpDownErrorMargin.Size = new System.Drawing.Size(120, 20);
+            this.numericUpDownErrorMargin.TabIndex = 18;
+            this.numericUpDownErrorMargin.Value = global::Gpx2Pic.Properties.Settings.Default.ErrorMargin;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(6, 88);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(80, 13);
+            this.label4.TabIndex = 17;
+            this.label4.Text = "Error margin [s]:";
+            // 
+            // numericUpDownTimeOffset
+            // 
+            this.numericUpDownTimeOffset.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Gpx2Pic.Properties.Settings.Default, "TimeOffset", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.numericUpDownTimeOffset.Location = new System.Drawing.Point(135, 104);
+            this.numericUpDownTimeOffset.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numericUpDownTimeOffset.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDownTimeOffset.Name = "numericUpDownTimeOffset";
+            this.numericUpDownTimeOffset.Size = new System.Drawing.Size(120, 20);
+            this.numericUpDownTimeOffset.TabIndex = 16;
+            this.numericUpDownTimeOffset.Value = global::Gpx2Pic.Properties.Settings.Default.TimeOffset;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(132, 88);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(76, 13);
+            this.label3.TabIndex = 15;
+            this.label3.Text = "Time offset [s]:";
             // 
             // textBoxGpxFile
             // 
@@ -291,7 +353,7 @@
             this.textBoxPicturesFolder.TabIndex = 11;
             this.textBoxPicturesFolder.Text = global::Gpx2Pic.Properties.Settings.Default.PicturesFolder;
             this.textBoxPicturesFolder.Click += new System.EventHandler(this.textBoxPicturesFolder_Click);
-            this.textBoxPicturesFolder.TextChanged += new System.EventHandler(this.textBoxGpxFile_TextChanged);
+            this.textBoxPicturesFolder.TextChanged += new System.EventHandler(this.textBoxPicturesFolder_TextChanged);
             // 
             // backgroundWorker1
             // 
@@ -312,12 +374,15 @@
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Gpx2Pic - Automatically geotag your photos";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.panelButtons.ResumeLayout(false);
             this.panelButtons.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownErrorMargin)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownTimeOffset)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -347,6 +412,10 @@
         private System.Windows.Forms.Button buttonShowUpInGoogleMaps;
         private System.Windows.Forms.Button buttonAbout;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.NumericUpDown numericUpDownTimeOffset;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.NumericUpDown numericUpDownErrorMargin;
+        private System.Windows.Forms.Label label4;
     }
 }
 
