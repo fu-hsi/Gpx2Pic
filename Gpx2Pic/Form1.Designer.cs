@@ -304,12 +304,12 @@
             this.numericUpDownTimeOffset.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Gpx2Pic.Properties.Settings.Default, "TimeOffset", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.numericUpDownTimeOffset.Location = new System.Drawing.Point(135, 104);
             this.numericUpDownTimeOffset.Maximum = new decimal(new int[] {
-            1000,
+            50400,
             0,
             0,
             0});
             this.numericUpDownTimeOffset.Minimum = new decimal(new int[] {
-            1000,
+            50400,
             0,
             0,
             -2147483648});

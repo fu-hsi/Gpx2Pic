@@ -93,6 +93,7 @@ namespace Gpx2Pic
                             item.SubItems.Add("").Name = "Model";
                         }
 
+                        item.SubItems.Add("").Name = "Taken";
                         if (reader.GetTagValue(ExifTags.DateTimeOriginal, out DateTime datePictureTaken))
                         {
                             DateTime newDatePictureTaken = datePictureTaken.AddSeconds((double)numericUpDownTimeOffset.Value);
@@ -101,13 +102,35 @@ namespace Gpx2Pic
                             {
                                 text += " -> " + newDatePictureTaken.ToLongTimeString();
                             }
-                            item.SubItems.Add(text).Name = "Taken";
+                            item.SubItems["Taken"].Text = text;
                             item.Tag = FindNearestTrackPoint(newDatePictureTaken);
                         }
                         else
                         {
-                            item.SubItems.Add("").Name = "Taken";
-                            isValid = false;
+                            string[] tokens = fi.Name.Split('_');
+                            if (tokens.Count() >= 3)
+                            {
+                                if (DateTime.TryParseExact(tokens[1] + tokens[2], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out datePictureTaken))
+                                {
+                                    DateTime newDatePictureTaken = datePictureTaken.AddSeconds((double)numericUpDownTimeOffset.Value);
+                                    string text = datePictureTaken.ToString();
+                                    if (numericUpDownTimeOffset.Value != 0)
+                                    {
+                                        text += " -> " + newDatePictureTaken.ToLongTimeString();
+                                    }
+                                    item.SubItems["Taken"].Text = text;
+                                    item.SubItems["Taken"].Tag = newDatePictureTaken;
+                                    item.Tag = FindNearestTrackPoint(newDatePictureTaken);
+                                }
+                                else
+                                {
+                                    isValid = false;
+                                }
+                            }
+                            else
+                            {
+                                isValid = false;
+                            }
                         }
 
                         if (reader.GetTagValue(ExifTags.PixelXDimension, out uint width) && reader.GetTagValue(ExifTags.PixelYDimension, out uint height))
@@ -149,7 +172,7 @@ namespace Gpx2Pic
             Analyze();
         }
 
-        private bool GeoTagPhoto(string fileName, double latitude, double longitude)
+        private bool GeoTagPhoto(string fileName, double latitude, double longitude, DateTime? dateTime = null)
         {
             try
             {
@@ -162,6 +185,12 @@ namespace Gpx2Pic
                     RedirectStandardOutput = true,
                     CreateNoWindow = true
                 };
+
+                // Set new DateTimeOriginal
+                if (dateTime.HasValue)
+                {
+                    startInfo.Arguments += " -DateTimeOriginal=\"" + dateTime.Value.ToString("yyyy:MM:dd HH:mm:ss") + "\"";
+                }
 
                 process.StartInfo = startInfo;
                 process.Start();
@@ -390,7 +419,8 @@ namespace Gpx2Pic
                         if (item.Tag is GpxPoint point)
                         {
                             string fileName = Path.Combine(textBoxPicturesFolder.Text, item.Text);
-                            bool result = GeoTagPhoto(Path.Combine(textBoxPicturesFolder.Text, fileName), point.Latitude, point.Longitude);
+                            DateTime? taken = item.SubItems["Taken"].Tag as DateTime?;
+                            bool result = GeoTagPhoto(Path.Combine(textBoxPicturesFolder.Text, fileName), point.Latitude, point.Longitude, taken);
 
                             if (result)
                             {
