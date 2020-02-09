@@ -14,7 +14,9 @@ Automatically geotag your photos.
 We use some dependencies, which are not imported to repository (from NuGet and external sites):
 - ExifTool by Phil Harvey,
 - ExifLib by Simon McKenzie,
-- Windows API Code Pack by rpastric.
+- Windows API Code Pack by rpastric,
+- GPX by dlg.krakow.pl,
+- Dynamically Sizing Columns by Nick Olsen.
 
 If you are a beginner, just download executable files from releases tab.
 
