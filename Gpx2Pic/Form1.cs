@@ -79,41 +79,38 @@ namespace Gpx2Pic
                     ListViewItem item = new ListViewItem(Path.GetFileName(f));
                     FileInfo fi = new FileInfo(f);
                     item.SubItems.Add((fi.Length / 1024.0 / 1024.0).ToString("N") + " MB").Name = "FileSize";
+                    item.SubItems.Add("").Name = "Model";
+                    item.SubItems.Add("").Name = "Taken";
+                    item.SubItems.Add("").Name = "ImageSize";
+                    item.SubItems.Add("").Name = "LatLong";
 
-                    using (ExifReader reader = new ExifReader(f))
+                    try
                     {
-                        bool isValid = true;
-
-                        if (reader.GetTagValue(ExifTags.Model, out string model))
+                        using (ExifReader reader = new ExifReader(f))
                         {
-                            item.SubItems.Add(model.ToString()).Name = "Model";
-                        }
-                        else
-                        {
-                            item.SubItems.Add("").Name = "Model";
-                        }
-
-                        item.SubItems.Add("").Name = "Taken";
-                        if (reader.GetTagValue(ExifTags.DateTimeOriginal, out DateTime datePictureTaken))
-                        {
-                            DateTime newDatePictureTaken = datePictureTaken.AddSeconds((double)numericUpDownTimeOffset.Value);
-                            string text = datePictureTaken.ToString();
-                            if (numericUpDownTimeOffset.Value != 0)
+                            if (reader.GetTagValue(ExifTags.Model, out string model))
                             {
-                                text += " -> " + newDatePictureTaken.ToLongTimeString();
+                                item.SubItems["Model"].Text = model;
                             }
-                            item.SubItems["Taken"].Text = text;
-                            item.Tag = FindNearestTrackPoint(newDatePictureTaken);
-                        }
-                        else
-                        {
-                            string[] tokens = fi.Name.Split('_');
-                            if (tokens.Count() >= 3)
+                            
+                            if (reader.GetTagValue(ExifTags.DateTimeOriginal, out DateTime datePictureTaken))
                             {
-                                if (DateTime.TryParseExact(tokens[1] + tokens[2], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out datePictureTaken))
+                                DateTime newDatePictureTaken = datePictureTaken.AddSeconds((double)numericUpDownTimeOffset.Value);
+                                string text = datePictureTaken.ToString();
+                                if (numericUpDownTimeOffset.Value != 0)
                                 {
-                                    DateTime newDatePictureTaken = datePictureTaken.AddSeconds((double)numericUpDownTimeOffset.Value);
-                                    string text = datePictureTaken.ToString();
+                                    text += " -> " + newDatePictureTaken.ToLongTimeString();
+                                }
+                                item.SubItems["Taken"].Text = text;
+                                item.Tag = FindNearestTrackPoint(newDatePictureTaken);
+                            }
+                            else
+                            {
+                                DateTime? datePictureTaken2 = ExtractTimeFromFileName(fi.Name);
+                                if (datePictureTaken2.HasValue)
+                                {
+                                    DateTime newDatePictureTaken = datePictureTaken2.Value.AddSeconds((double)numericUpDownTimeOffset.Value);
+                                    string text = datePictureTaken2.ToString();
                                     if (numericUpDownTimeOffset.Value != 0)
                                     {
                                         text += " -> " + newDatePictureTaken.ToLongTimeString();
@@ -122,39 +119,42 @@ namespace Gpx2Pic
                                     item.SubItems["Taken"].Tag = newDatePictureTaken;
                                     item.Tag = FindNearestTrackPoint(newDatePictureTaken);
                                 }
-                                else
-                                {
-                                    isValid = false;
-                                }
                             }
-                            else
+
+                            if (reader.GetTagValue(ExifTags.PixelXDimension, out uint width) && reader.GetTagValue(ExifTags.PixelYDimension, out uint height))
                             {
-                                isValid = false;
+                                item.SubItems["ImageSize"].Text = string.Format("{0} x {1}", width, height);
+                            }
+                            
+                            if (item.Tag is GpxPoint point)
+                            {
+                                item.SubItems["LatLong"].Text = string.Format(CultureInfo.InvariantCulture, "{0:F6}, {1:F6}", point.Latitude, point.Longitude);
+                            }
+                        }    
+                    }
+                    catch(Exception)
+                    {
+                        DateTime? datePictureTaken2 = ExtractTimeFromFileName(fi.Name);
+                        if (datePictureTaken2.HasValue)
+                        {
+                            DateTime newDatePictureTaken = datePictureTaken2.Value.AddSeconds((double)numericUpDownTimeOffset.Value);
+                            string text = datePictureTaken2.ToString();
+                            if (numericUpDownTimeOffset.Value != 0)
+                            {
+                                text += " -> " + newDatePictureTaken.ToLongTimeString();
+                            }
+                            item.SubItems["Taken"].Text = text;
+                            item.SubItems["Taken"].Tag = newDatePictureTaken;
+                            item.Tag = FindNearestTrackPoint(newDatePictureTaken);
+
+                            if (item.Tag is GpxPoint point)
+                            {
+                                item.SubItems["LatLong"].Text = string.Format(CultureInfo.InvariantCulture, "{0:F6}, {1:F6}", point.Latitude, point.Longitude);
                             }
                         }
-
-                        if (reader.GetTagValue(ExifTags.PixelXDimension, out uint width) && reader.GetTagValue(ExifTags.PixelYDimension, out uint height))
-                        {
-                            item.SubItems.Add(string.Format("{0} x {1}", width, height)).Name = "ImageSize";
-                        }
-                        else
-                        {
-                            item.SubItems.Add("").Name = "ImageSize";
-                        }
-
-                        if (item.Tag is GpxPoint point)
-                        {
-                            item.SubItems.Add(string.Format(CultureInfo.InvariantCulture, "{0:F6}, {1:F6}", point.Latitude, point.Longitude)).Name = "LatLong";
-                        }
-                        else
-                        {
-                            item.SubItems.Add("").Name = "LatLong";
-                            isValid = false;
-                        }
-
-                        item.Checked = isValid;
                     }
 
+                    item.Checked = item.Tag != null;
                     listView1.Items.Add(item);
                 }
 
@@ -168,6 +168,7 @@ namespace Gpx2Pic
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            listView1_Resize(listView1, EventArgs.Empty);
             Text = string.Format("{0} - Automatically geotag your photos (v{1})", Application.ProductName, Application.ProductVersion.Substring(0, Application.ProductVersion.Length - 2));
             Analyze();
         }
@@ -485,6 +486,27 @@ namespace Gpx2Pic
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             Properties.Settings.Default.Save();
+        }
+
+        private DateTime? ExtractTimeFromFileName(string fileName)
+        {
+            string[] tokens = fileName.Split('_');
+            if (tokens.Count() >= 3)
+            {
+                try
+                {
+                    if (DateTime.TryParseExact(tokens[1] + tokens[2], "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime datePictureTaken))
+                    {
+                        return datePictureTaken;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                
+            }
+            return null;
         }
     }
 }

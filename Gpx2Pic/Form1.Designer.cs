@@ -89,7 +89,7 @@
             // 
             // columnHeader1
             // 
-            this.columnHeader1.Tag = "1";
+            this.columnHeader1.Tag = "2";
             this.columnHeader1.Text = "File Name";
             this.columnHeader1.Width = 177;
             // 
@@ -171,9 +171,9 @@
             this.buttonShowUpInGoogleMaps.AutoSize = true;
             this.buttonShowUpInGoogleMaps.Location = new System.Drawing.Point(285, 11);
             this.buttonShowUpInGoogleMaps.Name = "buttonShowUpInGoogleMaps";
-            this.buttonShowUpInGoogleMaps.Size = new System.Drawing.Size(136, 31);
+            this.buttonShowUpInGoogleMaps.Size = new System.Drawing.Size(117, 31);
             this.buttonShowUpInGoogleMaps.TabIndex = 14;
-            this.buttonShowUpInGoogleMaps.Text = "Show up in Google Maps";
+            this.buttonShowUpInGoogleMaps.Text = "View in Google Maps";
             this.buttonShowUpInGoogleMaps.UseVisualStyleBackColor = true;
             this.buttonShowUpInGoogleMaps.Click += new System.EventHandler(this.buttonShowUpInGoogleMaps_Click);
             // 
@@ -281,7 +281,7 @@
             this.numericUpDownErrorMargin.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Gpx2Pic.Properties.Settings.Default, "ErrorMargin", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.numericUpDownErrorMargin.Location = new System.Drawing.Point(9, 104);
             this.numericUpDownErrorMargin.Maximum = new decimal(new int[] {
-            1000,
+            10000,
             0,
             0,
             0});
