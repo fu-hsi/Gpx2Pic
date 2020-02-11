@@ -133,7 +133,7 @@
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(80, 31);
             this.buttonSave.TabIndex = 10;
-            this.buttonSave.Text = "Save GPS";
+            this.buttonSave.Text = "Save EXIF";
             this.buttonSave.UseVisualStyleBackColor = true;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             // 
