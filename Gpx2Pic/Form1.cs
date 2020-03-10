@@ -490,7 +490,7 @@ namespace Gpx2Pic
 
         private DateTime? ExtractTimeFromFileName(string fileName)
         {
-            string[] tokens = fileName.Split('_');
+            string[] tokens = Path.GetFileNameWithoutExtension(fileName).Split('_');
             if (tokens.Count() >= 3)
             {
                 try
