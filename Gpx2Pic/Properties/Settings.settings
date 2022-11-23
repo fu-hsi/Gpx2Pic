@@ -14,5 +14,8 @@
     <Setting Name="ErrorMargin" Type="System.Decimal" Scope="User">
       <Value Profile="(Default)">300</Value>
     </Setting>
+    <Setting Name="BackupOriginal" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

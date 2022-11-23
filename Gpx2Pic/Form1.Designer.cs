@@ -37,6 +37,7 @@
             this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.buttonSave = new System.Windows.Forms.Button();
             this.panelButtons = new System.Windows.Forms.Panel();
+            this.checkBoxBackupOriginal = new System.Windows.Forms.CheckBox();
             this.buttonAbout = new System.Windows.Forms.Button();
             this.buttonShowUpInGoogleMaps = new System.Windows.Forms.Button();
             this.buttonInverseSelection = new System.Windows.Forms.Button();
@@ -84,7 +85,11 @@
             this.listView1.TabIndex = 4;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
+            this.listView1.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listView1_ItemCheck);
             this.listView1.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.listView1_ItemChecked);
+            this.listView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseDoubleClick);
+            this.listView1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseDown);
+            this.listView1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseUp);
             this.listView1.Resize += new System.EventHandler(this.listView1_Resize);
             // 
             // columnHeader1
@@ -107,7 +112,7 @@
             // 
             // columnHeader4
             // 
-            this.columnHeader4.Tag = "1";
+            this.columnHeader4.Tag = "2";
             this.columnHeader4.Text = "Taken";
             this.columnHeader4.Width = 111;
             // 
@@ -119,7 +124,7 @@
             // 
             // columnHeader6
             // 
-            this.columnHeader6.Tag = "1";
+            this.columnHeader6.Tag = "2";
             this.columnHeader6.Text = "Location";
             this.columnHeader6.Width = 127;
             // 
@@ -140,6 +145,7 @@
             // panelButtons
             // 
             this.panelButtons.AutoSize = true;
+            this.panelButtons.Controls.Add(this.checkBoxBackupOriginal);
             this.panelButtons.Controls.Add(this.buttonAbout);
             this.panelButtons.Controls.Add(this.buttonShowUpInGoogleMaps);
             this.panelButtons.Controls.Add(this.buttonInverseSelection);
@@ -152,6 +158,19 @@
             this.panelButtons.Padding = new System.Windows.Forms.Padding(10);
             this.panelButtons.Size = new System.Drawing.Size(784, 55);
             this.panelButtons.TabIndex = 11;
+            // 
+            // checkBoxBackupOriginal
+            // 
+            this.checkBoxBackupOriginal.AutoSize = true;
+            this.checkBoxBackupOriginal.Checked = global::Gpx2Pic.Properties.Settings.Default.BackupOriginal;
+            this.checkBoxBackupOriginal.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxBackupOriginal.DataBindings.Add(new System.Windows.Forms.Binding("Checked", global::Gpx2Pic.Properties.Settings.Default, "BackupOriginal", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.checkBoxBackupOriginal.Location = new System.Drawing.Point(408, 19);
+            this.checkBoxBackupOriginal.Name = "checkBoxBackupOriginal";
+            this.checkBoxBackupOriginal.Size = new System.Drawing.Size(63, 17);
+            this.checkBoxBackupOriginal.TabIndex = 16;
+            this.checkBoxBackupOriginal.Text = "Backup";
+            this.checkBoxBackupOriginal.UseVisualStyleBackColor = true;
             // 
             // buttonAbout
             // 
@@ -241,7 +260,7 @@
             // openFileDialog1
             // 
             this.openFileDialog1.DefaultExt = "gpx";
-            this.openFileDialog1.Filter = "GPX files|*.gpx";
+            this.openFileDialog1.Filter = "GPX and FIT files|*.gpx;*.fit";
             // 
             // buttonAnalyze
             // 
@@ -376,6 +395,7 @@
             this.Text = "Gpx2Pic - Automatically geotag your photos";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.Shown += new System.EventHandler(this.Form1_Shown);
             this.panelButtons.ResumeLayout(false);
             this.panelButtons.PerformLayout();
             this.panel1.ResumeLayout(false);
@@ -416,6 +436,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.NumericUpDown numericUpDownErrorMargin;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox checkBoxBackupOriginal;
     }
 }
 
